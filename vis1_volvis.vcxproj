@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{F54E9E26-6890-36D1-93ED-E8F0FCC0F370}</ProjectGuid>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <Keyword>Win32Proj</Keyword>
+    <Platform>x64</Platform>
+    <ProjectName>vis1_volvis</ProjectName>
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
+    <VcpkgEnabled>false</VcpkgEnabled>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="do_not_import_user.props" Condition="exists('do_not_import_user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)Debug\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">vis1_volvis.dir\Debug\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">vis1_volvis</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)Release\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">vis1_volvis.dir\Release\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">vis1_volvis</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</GenerateManifest>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(SolutionDir)autogen;$(SolutionDir)vcpkg_installed\x64-windows\include;$(SolutionDir)vcpkg_installed\x64-windows\include\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows\include\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\include\QtCore;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;QT_WIDGETS_LIB;QT_GUI_LIB;QT_CORE_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>
+WIN32;
+_DEBUG;
+_WINDOWS;
+QT_WIDGETS_LIB;
+QT_GUI_LIB;
+QT_CORE_LIB;
+%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>
+        $(SolutionDir)vcpkg_installed\include;
+        $(SolutionDir)vcpkg_installed\x64-windows\include;
+        $(SolutionDir)vcpkg_installed\x64-windows\include\QtWidgets;
+        $(SolutionDir)vcpkg_installed\x64-windows\include\QtGui;
+        $(SolutionDir)vcpkg_installed\x64-windows\include\QtCore;
+        %(AdditionalIncludeDirectories)
+      </AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>
+        $(SolutionDir)vcpkg_installed\include;
+        $(SolutionDir)vcpkg_installed\x64-windows\include;
+        $(SolutionDir)vcpkg_installed\x64-windows\include\QtWidgets;
+        $(SolutionDir)vcpkg_installed\x64-windows\include\QtGui;
+        $(SolutionDir)vcpkg_installed\x64-windows\include\QtCore;
+        %(AdditionalIncludeDirectories)
+      </AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>
+Qt5Widgetsd.lib;
+glew32d.lib;
+Qt5Guid.lib;
+Qt5Cored.lib;
+netcdf.lib;
+glsw.lib;
+opengl32.lib;
+glu32.lib;
+%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)vcpkg_installed\x64-windows\debug\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>$(SolutionDir)Debug/vis1_volvis.lib</ImportLibrary>
+      <ProgramDataBaseFile>$(SolutionDir)Debug/vis1_volvis.pdb</ProgramDataBaseFile>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+    <PreBuildEvent>
+      <Command>mkdir autogen &gt;nul 2&gt;&amp;1
+del /f /q autogen
+for %%I in ("$(SolutionDir)src\*.h") do ( 
+"$(SolutionDir)vcpkg_installed\x64-windows\tools\qt5-base\bin\moc.exe" -nn "%%I" -o "$(SolutionDir)autogen\moc_%%~nI.cpp"
+ECHO #include "moc_%%~nI.cpp" &gt;&gt; "$(SolutionDir)autogen\moc.h"
+)
+for %%I in ("$(SolutionDir)res\*.ui") do (
+"$(SolutionDir)vcpkg_installed\x64-windows\tools\qt5-base\bin\uic.exe" "%%I" -o "$(SolutionDir)autogen\ui_%%~nI.h"
+)</Command>
+      <Message>Building QT autogen elements</Message>
+    </PreBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>
+$(SolutionDir)autogen;
+$(SolutionDir)vcpkg_installed\x64-windows\include;
+$(SolutionDir)vcpkg_installed\x64-windows\include\QtWidgets;
+$(SolutionDir)vcpkg_installed\x64-windows\include\QtGui;
+$(SolutionDir)vcpkg_installed\x64-windows\include\QtCore;
+%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;QT_WIDGETS_LIB;QT_GUI_LIB;QT_CORE_LIB;NDEBUG;QT_NO_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>
+WIN32;
+_WINDOWS;
+NDEBUG;
+QT_WIDGETS_LIB;
+QT_GUI_LIB;
+QT_CORE_LIB;
+QT_NO_DEBUG;
+%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>
+$(SolutionDir)autogen;
+$(SolutionDir)vcpkg_installed\include;
+$(SolutionDir)vcpkg_installed\x64-windows\include;
+$(SolutionDir)vcpkg_installed\x64-windows\include\QtWidgets;
+$(SolutionDir)vcpkg_installed\x64-windows\include\QtGui;
+$(SolutionDir)vcpkg_installed\x64-windows\include\QtCore;
+%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>
+$(SolutionDir)autogen;
+$(SolutionDir)vcpkg_installed\include;
+$(SolutionDir)vcpkg_installed\x64-windows\include;
+$(SolutionDir)vcpkg_installed\x64-windows\include\QtWidgets;
+$(SolutionDir)vcpkg_installed\x64-windows\include\QtGui;
+$(SolutionDir)vcpkg_installed\x64-windows\include\QtCore;
+%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>
+Qt5Widgets.lib;
+glew32.lib;
+Qt5Gui.lib;
+Qt5Core.lib;
+netcdf.lib;
+glsw.lib;
+opengl32.lib;
+glu32.lib;
+%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)vcpkg_installed\x64-windows\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>$(SolutionDir)Release/vis1_volvis.lib</ImportLibrary>
+      <ProgramDataBaseFile>$(SolutionDir)Release/vis1_volvis.pdb</ProgramDataBaseFile>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+    <PreBuildEvent>
+      <Command>mkdir autogen &gt;nul 2&gt;&amp;1
+del /f /q autogen
+for %%I in ("$(SolutionDir)src\*.h") do ( 
+"$(SolutionDir)vcpkg_installed\x64-windows\tools\qt5-base\bin\moc.exe" -nn "%%I" -o "$(SolutionDir)autogen\moc_%%~nI.cpp"
+ECHO #include "moc_%%~nI.cpp" &gt;&gt; "$(SolutionDir)autogen\moc.h"
+)
+for %%I in ("$(SolutionDir)res\*.ui") do (
+"$(SolutionDir)vcpkg_installed\x64-windows\tools\qt5-base\bin\uic.exe" "%%I" -o "$(SolutionDir)autogen\ui_%%~nI.h"
+)</Command>
+      <Message>Building QT autogen elements</Message>
+    </PreBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="$(SolutionDir)src\Camera.cpp" />
+    <ClInclude Include="$(SolutionDir)src\Camera.h" />
+    <ClCompile Include="$(SolutionDir)src\GLWidget.cpp" />
+    <ClInclude Include="$(SolutionDir)src\GLWidget.h" />
+    <ClCompile Include="$(SolutionDir)src\MainWindow.cpp" />
+    <ClInclude Include="$(SolutionDir)src\MainWindow.h" />
+    <ClCompile Include="$(SolutionDir)src\Volume.cpp" />
+    <ClInclude Include="$(SolutionDir)src\Volume.h" />
+    <ClCompile Include="$(SolutionDir)src\vis1-volvisLab.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\MainWindow.ui">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</DeploymentContent>
+      <FileType>Document</FileType>
+    </None>
+    <None Include="res\shader\cube.glsl">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </None>
+    <None Include="res\shader\raycasting.glsl">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </None>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="$(SolutionDir)src\Camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="$(SolutionDir)src\GLWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="$(SolutionDir)src\MainWindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="$(SolutionDir)src\Volume.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="$(SolutionDir)src\vis1-volvisLab.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(SolutionDir)src\Camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="$(SolutionDir)src\GLWidget.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="$(SolutionDir)src\MainWindow.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="$(SolutionDir)src\Volume.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{F20E3406-46D0-3BDE-A117-DE4296CFDB5F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{AB7861A3-D9C7-39D2-977B-C63A1E983A50}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Additional Resources">
+      <UniqueIdentifier>{bed4cdb6-86cb-4335-aaa2-5ff699fb4773}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\MainWindow.ui">
+      <Filter>Additional Resources</Filter>
+    </None>
+    <None Include="res\shader\cube.glsl">
+      <Filter>Additional Resources</Filter>
+    </None>
+    <None Include="res\shader\raycasting.glsl">
+      <Filter>Additional Resources</Filter>
+    </None>
+  </ItemGroup>
+</Project>

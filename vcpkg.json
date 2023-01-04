@@ -1,0 +1,12 @@
+{
+  "name": "rtvis1",
+  "version-string": "0.0.1",
+  "dependencies": [
+    "glew",
+    "glm",
+    "glsw",
+    "netcdf-c",
+    "opengl",
+    "qt5-base"
+  ]
+}
