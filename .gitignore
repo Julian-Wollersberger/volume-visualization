@@ -1,0 +1,9 @@
+﻿################################################################################
+# Diese .gitignore-Datei wurde von Microsoft(R) Visual Studio automatisch erstellt.
+################################################################################
+
+/.vs/vis1_volvis/v16
+/Debug
+/Release
+/vcpkg_installed/x64-windows
+/vis1_volvis.dir/Debug

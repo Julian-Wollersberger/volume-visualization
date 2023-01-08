@@ -34,7 +34,10 @@ out vec3 texCoordVar;
 
 void main()
 {
-	// *your code here*
+	// *your code here* 
+
+	// This part of the shader processes each corner of the containing cube.
+	// It applies the camera movement.
 
 	gl_Position = projMatrix * mvMatrix * vec4(vertex * scale, 1); 
 }
@@ -49,5 +52,11 @@ void main()
 {
 	// *your code here*
 
-	fragColor = vec4(0);
+	// "Fragment" essentially means "pixel", but maybe at a different resolution.
+	// So this shader gives every pixel a value.
+
+	// Question: How does this know what the background is, and in which triangle we are in?
+
+	fragColor = vec4(1, 1, 0, 1);
 }
+

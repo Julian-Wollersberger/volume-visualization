@@ -149,6 +149,39 @@ void GLWidget::paintGL()
 	m_programCube->setUniformValue(3, projection);
 	m_programCube->setUniformValue(4, QVector3D(scale.x, scale.y, scale.z));
 
+	// Clear the screen
+	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	// Experimental drawing code. From http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-9-vbo-indexing/
+	GLfloat* indexed_vertices = cube_vertices;
+	GLuint vertexbuffer;
+	glGenBuffers(1, &vertexbuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+	glBufferData(GL_ARRAY_BUFFER, 8 * 3 * sizeof(GLfloat), &indexed_vertices[0], GL_STATIC_DRAW);
+
+	GLushort* indices = cube_elements;
+	// Generate a buffer for the indices
+	GLuint elementbuffer;
+	glGenBuffers(1, &elementbuffer);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, /*indices.size()*/ 12 * 3 * sizeof(GLushort), &indices[0], GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(0);
+	//glBindBuffer(GL_ARRAY_BUFFER, m_vertexBuffer.bufferId());
+
+	// Index buffer
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
+
+	// Draw the triangles !
+	glDrawElements(
+		GL_TRIANGLES,      // mode
+		12 * 3 * sizeof(GLushort),    // count
+		GL_UNSIGNED_SHORT,   // type
+		(void*)0           // element array buffer offset
+	);
+
+	glDisableVertexAttribArray(0);
+
 	// 1. render front faces to FBO
 
 	// *your code here*
@@ -162,10 +195,10 @@ void GLWidget::paintGL()
 	// 3. render the volume
 
 	QOpenGLVertexArrayObject::Binder vaoBinder2(&m_vaoQuad);
-	m_programVolume->bind();
+	m_programRaycasting->bind();
 
-	m_programVolume->setUniformValue(8, m_renderingMode);
-	m_programVolume->setUniformValue(9, m_iso);
+	m_programRaycasting->setUniformValue(8, m_renderingMode);
+	m_programRaycasting->setUniformValue(9, m_iso);
 
 	// *your code here*
 
@@ -192,7 +225,7 @@ void GLWidget::initializeGL()
 
 	// create programs
 	m_programCube = new QOpenGLShaderProgram();
-	m_programVolume = new QOpenGLShaderProgram();
+	m_programRaycasting = new QOpenGLShaderProgram();
 
 	loadShaders();
 	
@@ -260,14 +293,14 @@ void GLWidget::initializeGL()
 	m_vertexBufferQuad.allocate(quad_vertices, 4 * 3 * sizeof(GLfloat));
 	m_indexBufferQuad.allocate(quad_elements, 2 * 3 * sizeof(GLushort));
 
-	m_programVolume->setAttributeBuffer(
+	m_programRaycasting->setAttributeBuffer(
 		0,			// Specifies the index of the generic vertex attribute to be modified
 		GL_FLOAT,	// Specifies the data type of each component in the array
 		0,			// Specifies the byte offset between consecutive generic vertex attributes
 		3			// Specifies the number of components per generic vertex attribute
 	);
 
-	m_programVolume->enableAttributeArray(0);
+	m_programRaycasting->enableAttributeArray(0);
 	
 	GLint total_mem_kb = 0;
 	glGetIntegerv(GL_GPU_MEM_INFO_TOTAL_AVAILABLE_MEM_NVX,
@@ -322,9 +355,9 @@ void GLWidget::cleanup()
 	m_FBO_backFaces = nullptr;
 	
 	m_programCube->release();
-	m_programVolume->release();
+	m_programRaycasting->release();
 	m_programCube = nullptr;
-	m_programVolume = nullptr;
+	m_programRaycasting = nullptr;
 
 	delete m_logger;
 	delete m_fileWatcher;
@@ -355,10 +388,11 @@ void GLWidget::addFilesToWatcher()
 
 void GLWidget::loadShaders()
 {
-	qDebug() << "Compiling shaders.";
-
+	qDebug() << "Compiling shader 'cube':";
 	compileShaders("cube", m_programCube);
-	compileShaders("raycasting", m_programVolume);
+	qDebug() << "Compiling shader 'raycasting':";
+	compileShaders("raycasting", m_programRaycasting);
+	qDebug() << "Done Compiling.";
 }
 
 bool GLWidget::compileShaders(std::string name, QOpenGLShaderProgram* shader)
@@ -367,20 +401,24 @@ bool GLWidget::compileShaders(std::string name, QOpenGLShaderProgram* shader)
 
 	const char* vs = glswGetShader((name + ".Vertex").c_str());
 	success = success && vs;
+	if (!success) qDebug() << "Error in glswGetShader()";
 	QOpenGLShader* vertexShader = new QOpenGLShader(QOpenGLShader::Vertex);
 	success &= vertexShader->compileSourceCode(vs);
+	if (!success) qDebug() << "Error in compileSourceCode()" << vertexShader->log();
 
 	const char* fs = glswGetShader((name + ".Fragment").c_str());
 	success = success && fs;
+	if (!success) qDebug() << "Error in glswGetShader() 2";
 	QOpenGLShader* fragmentShader = new QOpenGLShader(QOpenGLShader::Fragment);
 	success &= fragmentShader->compileSourceCode(fs);
+	if (!success) qDebug() << "Error in compileSourceCode() 2" << fragmentShader->log();
 
 	shader->removeAllShaders();
 	shader->addShader(vertexShader);
 	shader->addShader(fragmentShader);
 	shader->link();
 
-	if (!success) qDebug() << "Error loading & compiling " << name.c_str() << " shader.";
+	//if (!success) qDebug() << "Error loading & compiling " << name.c_str() << " shader.";
 
 	return success;
 }

@@ -78,7 +78,7 @@ private:
 	bool compileShaders(std::string name, QOpenGLShaderProgram* shader);
 
 	QOpenGLShaderProgram *m_programCube;
-	QOpenGLShaderProgram *m_programVolume;
+	QOpenGLShaderProgram *m_programRaycasting;
 
 	QOpenGLVertexArrayObject m_vaoCube;
 	QOpenGLVertexArrayObject m_vaoQuad;

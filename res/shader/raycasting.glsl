@@ -26,17 +26,27 @@ out vec2 texCoord;
 
 void main()
 {
-	// *your code here*
+	gl_Position.xyz = vertex;
+	gl_Position.w = 1.0;
 
-	gl_Position = vec4(0);
+	// What should this one do? 
+	// It doesn't apply the camera transform, that's the job of "cube.glsl".
+
+	texCoord = vec2(0,0);
 }
 
 -- Fragment
 
 #extension GL_ARB_explicit_uniform_location : enable
 
+// "uniform" means that this value is the same in all parallel executions of this shader.
+
+// "sampler2D" means its a 2D array of (what? vec3? vec4?) values.
+// The frontFaces are the (world) coordinates where the rays should start. 
+// backFaces are the coordinates where the rays should end.
 layout(location = 5) uniform sampler2D frontFaces;
 layout(location = 6) uniform sampler2D backFaces;
+// This is the data of the scan.
 layout(location = 7) uniform sampler3D volume;
 
 layout(location = 8) uniform int renderingMode;
@@ -54,23 +64,27 @@ void main()
 	{
 		case 0: //render front faces
 		{
-			fragColor = vec4(0);
+			fragColor = vec4(1,0,0,1);
 			return;
 		}
 		case 1: //render back faces
 		{
-			fragColor = vec4(0);
+			fragColor = vec4(0,1,0,1);
 			return;
 		}
 		case 2: //render volume (positions)
 		{
-			fragColor = vec4(0);
+			fragColor = vec4(0,0,1,1);
 			return;
 		}
 		case 3: //render volume (shaded)
 		{
-			fragColor = vec4(0);
+			fragColor = vec4(1,1,0,1);
 			return;
 		}
 	}
+
+	
 }
+
+
