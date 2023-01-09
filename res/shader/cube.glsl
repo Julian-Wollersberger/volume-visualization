@@ -34,15 +34,16 @@ out vec3 texCoordVar;
 
 void main()
 {
-	// *your code here* 
-
 	// This part of the shader processes each corner of the containing cube.
-	// It applies the camera movement.
+	// The camera movement can only be applied to the final vertex position, 
+	// but not to the "frontFaces" part.
 
 	gl_Position = projMatrix * mvMatrix * vec4(vertex * scale, 1.0); 
-
-	// I'm guessing here...
-	texCoordVar = gl_Position.xyz;
+	//texCoordVar = gl_Position.xyz;
+	
+	// Move the cube to have one corner at (0|0|0), instead of at (-1|-1|-1).
+	// The other corner must stay at (1|1|1), so divide by two.
+	texCoordVar = (vertex.xyz + 1.0) / 2.0;
 }
 
 -- Fragment
@@ -65,6 +66,6 @@ void main()
 	// and this shader interpolates that and interprets the position as a color.
 	// Except that Opacity must be 1.0
 
-	fragColor = vec4(1.0, texCoordVar);
+	fragColor = vec4(texCoordVar.x, texCoordVar.y, texCoordVar.z, 1.0);
 }
 

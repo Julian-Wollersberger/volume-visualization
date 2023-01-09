@@ -149,6 +149,45 @@ void GLWidget::paintGL()
 	m_programCube->setUniformValue(3, projection);
 	m_programCube->setUniformValue(4, QVector3D(scale.x, scale.y, scale.z));
 
+	// 1. render front faces to FBO
+
+	// Loosly based on https://github.com/toolchainX/Volume_Rendering_Using_GLSL/blob/master/main.cpp
+	//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_FBO_frontFaces->handle());
+	m_FBO_frontFaces->bind();
+	//glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_FRONT);
+	
+	// Draw to m_FBO_frontFaces.
+	// (Currently we have bound: vaoBinder, m_programCube, m_FBO_frontFaces, 
+	// and the stuff bound in `init()` like the cube vertices)
+	glDrawElements(
+		GL_TRIANGLES,      // mode
+		12 * 3 * sizeof(GLushort),    // count
+		GL_UNSIGNED_SHORT,   // type
+		(void*)0           // element array buffer offset
+	);
+
+	glDisable(GL_CULL_FACE);
+	m_FBO_frontFaces->release();
+
+	// 2. render back faces to FBO
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK); // Only draw the back trianges, not the front ones.
+
+	m_FBO_backFaces->bind();
+	glDrawElements(
+		GL_TRIANGLES,      // mode
+		12 * 3 * sizeof(GLushort),    // count
+		GL_UNSIGNED_SHORT,   // type
+		(void*)0           // element array buffer offset
+	);
+
+	glDisable(GL_CULL_FACE);
+	m_FBO_backFaces->release();
+
 	// Clear the screen
 	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -156,7 +195,7 @@ void GLWidget::paintGL()
 	//GLfloat* indexed_vertices = cube_vertices;
 	//GLuint vertexbuffer;
 	//glGenBuffers(1, &vertexbuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, m_vertexBuffer.bufferId());
+	//glBindBuffer(GL_ARRAY_BUFFER, m_vertexBuffer.bufferId());
 	//glBufferData(GL_ARRAY_BUFFER, 8 * 3 * sizeof(GLfloat), &indexed_vertices[0], GL_STATIC_DRAW);
 
 	//GLushort* indices = cube_elements;
@@ -166,32 +205,25 @@ void GLWidget::paintGL()
 	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_indexBuffer.bufferId());
 	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, /*indices.size()*/ 12 * 3 * sizeof(GLushort), &indices[0], GL_STATIC_DRAW);
 
-	glEnableVertexAttribArray(0);
+	//glEnableVertexAttribArray(0);
 	//glBindBuffer(GL_ARRAY_BUFFER, m_vertexBuffer.bufferId());
 	// Index buffer
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_indexBuffer.bufferId());
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_indexBuffer.bufferId());
 
 	// Draw the triangles!
+	
 	glDrawElements(
 		GL_TRIANGLES,      // mode
 		12 * 3 * sizeof(GLushort),    // count
 		GL_UNSIGNED_SHORT,   // type
 		(void*)0           // element array buffer offset
 	);
-
-	glDisableVertexAttribArray(0);
+	
+	//glDisableVertexAttribArray(0);
 
 	// Temp
 	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
-	// 1. render front faces to FBO
-
-	// *your code here*
-
-	// 2. render back faces to FBO
-
-	// *your code here*
 
 	vaoBinder.release();
 
@@ -222,7 +254,8 @@ void GLWidget::initializeGL()
 	m_VolumeTexture->setFormat(QOpenGLTexture::RGB32F);
 
 	initializeOpenGLFunctions();
-	glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
+	//glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	
 	glEnable(GL_DEPTH_TEST);
 
