@@ -22,10 +22,13 @@
 
 layout(location = 0) in vec3 vertex;
 
+// I think this binds to the 'texCoord' variable in the Fragment shader.
 out vec2 texCoord;
 
 void main()
 {
+	
+
 	gl_Position.xyz = vertex;
 	gl_Position.w = 1.0;
 

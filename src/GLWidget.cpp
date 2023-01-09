@@ -153,26 +153,25 @@ void GLWidget::paintGL()
 	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// Experimental drawing code. From http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-9-vbo-indexing/
-	GLfloat* indexed_vertices = cube_vertices;
-	GLuint vertexbuffer;
-	glGenBuffers(1, &vertexbuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-	glBufferData(GL_ARRAY_BUFFER, 8 * 3 * sizeof(GLfloat), &indexed_vertices[0], GL_STATIC_DRAW);
+	//GLfloat* indexed_vertices = cube_vertices;
+	//GLuint vertexbuffer;
+	//glGenBuffers(1, &vertexbuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, m_vertexBuffer.bufferId());
+	//glBufferData(GL_ARRAY_BUFFER, 8 * 3 * sizeof(GLfloat), &indexed_vertices[0], GL_STATIC_DRAW);
 
-	GLushort* indices = cube_elements;
+	//GLushort* indices = cube_elements;
 	// Generate a buffer for the indices
-	GLuint elementbuffer;
-	glGenBuffers(1, &elementbuffer);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, /*indices.size()*/ 12 * 3 * sizeof(GLushort), &indices[0], GL_STATIC_DRAW);
+	//GLuint elementbuffer;
+	//glGenBuffers(1, &elementbuffer);
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_indexBuffer.bufferId());
+	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, /*indices.size()*/ 12 * 3 * sizeof(GLushort), &indices[0], GL_STATIC_DRAW);
 
 	glEnableVertexAttribArray(0);
 	//glBindBuffer(GL_ARRAY_BUFFER, m_vertexBuffer.bufferId());
-
 	// Index buffer
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_indexBuffer.bufferId());
 
-	// Draw the triangles !
+	// Draw the triangles!
 	glDrawElements(
 		GL_TRIANGLES,      // mode
 		12 * 3 * sizeof(GLushort),    // count
@@ -181,6 +180,10 @@ void GLWidget::paintGL()
 	);
 
 	glDisableVertexAttribArray(0);
+
+	// Temp
+	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 
 	// 1. render front faces to FBO
 

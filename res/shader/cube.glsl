@@ -39,7 +39,10 @@ void main()
 	// This part of the shader processes each corner of the containing cube.
 	// It applies the camera movement.
 
-	gl_Position = projMatrix * mvMatrix * vec4(vertex * scale, 1); 
+	gl_Position = projMatrix * mvMatrix * vec4(vertex * scale, 1.0); 
+
+	// I'm guessing here...
+	texCoordVar = gl_Position.xyz;
 }
 
 -- Fragment
@@ -54,9 +57,14 @@ void main()
 
 	// "Fragment" essentially means "pixel", but maybe at a different resolution.
 	// So this shader gives every pixel a value.
+	//fragColor = vec4(1, 1, 0, 1);
 
-	// Question: How does this know what the background is, and in which triangle we are in?
 
-	fragColor = vec4(1, 1, 0, 1);
+	// New understanding: 
+	// The Vertex shader puts the position into `texCoordVar`
+	// and this shader interpolates that and interprets the position as a color.
+	// Except that Opacity must be 1.0
+
+	fragColor = vec4(1.0, texCoordVar);
 }
 
