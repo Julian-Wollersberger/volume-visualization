@@ -157,7 +157,7 @@ void GLWidget::paintGL()
 	//glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_CULL_FACE);
-	glCullFace(GL_FRONT);
+	glCullFace(GL_BACK); // Only draw the front faces.
 	
 	// Draw to m_FBO_frontFaces.
 	// (Currently we have bound: vaoBinder, m_programCube, m_FBO_frontFaces, 
@@ -173,11 +173,12 @@ void GLWidget::paintGL()
 	m_FBO_frontFaces->release();
 
 	// 2. render back faces to FBO
+	m_FBO_backFaces->bind();
+	//glClearColor(0.0f, 0.0f, 1.0f, 1.0f); 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK); // Only draw the back trianges, not the front ones.
+	glCullFace(GL_FRONT); // Only draw the back trianges, not the front ones.
 
-	m_FBO_backFaces->bind();
 	glDrawElements(
 		GL_TRIANGLES,      // mode
 		12 * 3 * sizeof(GLushort),    // count
@@ -211,14 +212,14 @@ void GLWidget::paintGL()
 	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_indexBuffer.bufferId());
 
 	// Draw the triangles!
-	
+	/*
 	glDrawElements(
 		GL_TRIANGLES,      // mode
 		12 * 3 * sizeof(GLushort),    // count
 		GL_UNSIGNED_SHORT,   // type
 		(void*)0           // element array buffer offset
 	);
-	
+	*/
 	//glDisableVertexAttribArray(0);
 
 	// Temp
@@ -236,6 +237,34 @@ void GLWidget::paintGL()
 	m_programRaycasting->setUniformValue(9, m_iso);
 
 	// *your code here*
+	
+	
+	// Render to the screen
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	//glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, renderedTexture, 0);
+	
+	// Bind the frontFaces texture in location 5
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_FBO_frontFaces->texture());
+	GLuint frontFaces_location = 5;
+	glUniform1i(frontFaces_location, 0);
+	
+	// Bind the backFaces texture in location 6
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, m_FBO_backFaces->texture());
+	GLuint backFaces_location = 6;
+	glUniform1i(backFaces_location, 1);
+	
+	
+	//  Draw the Quad. That one should be bound already?
+	glDrawElements(
+		GL_TRIANGLES,      // mode
+		2 * 3 * sizeof(GLushort),    // count
+		GL_UNSIGNED_SHORT,   // type
+		(void*)0           // element array buffer offset
+	);
 
 	vaoBinder2.release();
 }

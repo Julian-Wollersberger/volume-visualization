@@ -20,6 +20,8 @@
 
 #extension GL_ARB_explicit_attrib_location : enable
 
+// The raycasting shader renders on the "m_vertexBufferQuad",
+// which is just a sqare. It's basically the 2D texture.
 layout(location = 0) in vec3 vertex;
 
 // I think this binds to the 'texCoord' variable in the Fragment shader.
@@ -27,15 +29,13 @@ out vec2 texCoord;
 
 void main()
 {
-	
-
-	gl_Position.xyz = vertex;
-	gl_Position.w = 1.0;
+	gl_Position = vec4(vertex, 1.0);
 
 	// What should this one do? 
 	// It doesn't apply the camera transform, that's the job of "cube.glsl".
 
-	texCoord = vec2(0,0);
+	// I think it just maps the vertec coordinates to the texture coordinates.
+	texCoord = vertex.xy;
 }
 
 -- Fragment
@@ -61,18 +61,19 @@ out vec4 fragColor;
 
 void main()
 {
-	// *your code here*
+	// the `texture()` call wants the coordinates to be from 0 to 1, not -1 to 1.
+	vec2 texCoordNormalized = (texCoord + 1.0) / 2.0;
 
 	switch(renderingMode)
 	{
 		case 0: //render front faces
 		{
-			fragColor = vec4(1,0,0,1);
+			fragColor = texture(frontFaces, texCoordNormalized);
 			return;
 		}
 		case 1: //render back faces
 		{
-			fragColor = vec4(0,1,0,1);
+			fragColor = texture(backFaces, texCoordNormalized);
 			return;
 		}
 		case 2: //render volume (positions)
@@ -86,8 +87,6 @@ void main()
 			return;
 		}
 	}
-
-	
 }
 
 
