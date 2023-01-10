@@ -59,6 +59,40 @@ layout(location = 10) uniform int MAX_STEPS = 1024;
 in vec2 texCoord;
 out vec4 fragColor;
 
+vec4 trace_ray(vec2 texCoordNormalized) 
+{
+	// end position minus start position gives the ray direction.
+	vec4 start = texture(frontFaces, texCoordNormalized);
+	vec4 end = texture(backFaces, texCoordNormalized);
+	vec4 direction = end - start;
+	// Divide that into the individual steps
+	vec4 step = direction / MAX_STEPS;
+
+	vec4 first_hit = end;
+	bool was_hit = false;
+	for (int i = 0; i < MAX_STEPS; i++)
+	{
+		// Get the density at the current ray position.
+		// I use `i * step` instead of `+= step` to minimize rounding errors.
+		vec4 current_point = start + i * step;
+		vec4 density = texture(volume, current_point.xyz);
+		
+		// The volume contains vec4, but only the x component seems to be used.
+		if (density.x > iso) {
+			first_hit = current_point;
+			was_hit = true;
+			break;
+		}
+	}
+
+	//return texture(volume, first_hit.xyz);
+	if (was_hit) {
+		return vec4(1.0); //white
+	} else {
+		return vec4(0.0); //transparent black
+	}
+}
+
 void main()
 {
 	// the `texture()` call wants the coordinates to be from 0 to 1, not -1 to 1.
@@ -78,7 +112,7 @@ void main()
 		}
 		case 2: //render volume (positions)
 		{
-			fragColor = vec4(0,0,1,1);
+			fragColor = trace_ray(texCoordNormalized);
 			return;
 		}
 		case 3: //render volume (shaded)
@@ -88,5 +122,4 @@ void main()
 		}
 	}
 }
-
 

@@ -256,7 +256,12 @@ void GLWidget::paintGL()
 	glBindTexture(GL_TEXTURE_2D, m_FBO_backFaces->texture());
 	GLuint backFaces_location = 6;
 	glUniform1i(backFaces_location, 1);
-	
+
+	// Bind the volume in location 7
+	glActiveTexture(GL_TEXTURE2);
+	m_VolumeTexture->bind();
+	GLuint volume_location = 7;
+	glUniform1i(volume_location, 2);
 	
 	//  Draw the Quad. That one should be bound already?
 	glDrawElements(
