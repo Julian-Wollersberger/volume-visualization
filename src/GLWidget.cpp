@@ -151,80 +151,44 @@ void GLWidget::paintGL()
 
 	// 1. render front faces to FBO
 
-	// Loosly based on https://github.com/toolchainX/Volume_Rendering_Using_GLSL/blob/master/main.cpp
-	//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_FBO_frontFaces->handle());
+	// Bind the front faces buffer to the `fragColor` our variable in the cube shader.
 	m_FBO_frontFaces->bind();
-	//glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
+	// Reset the OpenGL state.
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	// Don't draw triangles that are behind other triangles. Only draw the front triangles.
 	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK); // Only draw the front faces.
+	glCullFace(GL_BACK); 
 	
 	// Draw to m_FBO_frontFaces.
-	// (Currently we have bound: vaoBinder, m_programCube, m_FBO_frontFaces, 
-	// and the stuff bound in `init()` like the cube vertices)
+	// (There are several buffers currently bound: vaoBinder, m_programCube, m_FBO_frontFaces, 
+	// and other from the `init()` function, like the cube vertices.)
 	glDrawElements(
-		GL_TRIANGLES,      // mode
+		GL_TRIANGLES,                 // mode
 		12 * 3 * sizeof(GLushort),    // count
-		GL_UNSIGNED_SHORT,   // type
-		(void*)0           // element array buffer offset
+		GL_UNSIGNED_SHORT,            // type
+		(void*)0                      // element array buffer offset
 	);
-
+	// We're done with the front faces.
 	glDisable(GL_CULL_FACE);
 	m_FBO_frontFaces->release();
 
 	// 2. render back faces to FBO
 	m_FBO_backFaces->bind();
-	//glClearColor(0.0f, 0.0f, 1.0f, 1.0f); 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_CULL_FACE);
-	glCullFace(GL_FRONT); // Only draw the back trianges, not the front ones.
-
+	// This time only draw the back trianges, not the front ones.
+	glCullFace(GL_FRONT); 
+	
+	// Execute the same shader as with the front faces, but this time
+	// to the back faces buffer, and with a different `glCullFace()` mode.
 	glDrawElements(
-		GL_TRIANGLES,      // mode
+		GL_TRIANGLES,                 // mode
 		12 * 3 * sizeof(GLushort),    // count
-		GL_UNSIGNED_SHORT,   // type
-		(void*)0           // element array buffer offset
+		GL_UNSIGNED_SHORT,            // type
+		(void*)0                      // element array buffer offset
 	);
-
 	glDisable(GL_CULL_FACE);
 	m_FBO_backFaces->release();
-
-	// Clear the screen
-	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	// Experimental drawing code. From http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-9-vbo-indexing/
-	//GLfloat* indexed_vertices = cube_vertices;
-	//GLuint vertexbuffer;
-	//glGenBuffers(1, &vertexbuffer);
-	//glBindBuffer(GL_ARRAY_BUFFER, m_vertexBuffer.bufferId());
-	//glBufferData(GL_ARRAY_BUFFER, 8 * 3 * sizeof(GLfloat), &indexed_vertices[0], GL_STATIC_DRAW);
-
-	//GLushort* indices = cube_elements;
-	// Generate a buffer for the indices
-	//GLuint elementbuffer;
-	//glGenBuffers(1, &elementbuffer);
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_indexBuffer.bufferId());
-	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, /*indices.size()*/ 12 * 3 * sizeof(GLushort), &indices[0], GL_STATIC_DRAW);
-
-	//glEnableVertexAttribArray(0);
-	//glBindBuffer(GL_ARRAY_BUFFER, m_vertexBuffer.bufferId());
-	// Index buffer
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_indexBuffer.bufferId());
-
-	// Draw the triangles!
-	/*
-	glDrawElements(
-		GL_TRIANGLES,      // mode
-		12 * 3 * sizeof(GLushort),    // count
-		GL_UNSIGNED_SHORT,   // type
-		(void*)0           // element array buffer offset
-	);
-	*/
-	//glDisableVertexAttribArray(0);
-
-	// Temp
-	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 
 	vaoBinder.release();
 
@@ -233,25 +197,18 @@ void GLWidget::paintGL()
 	QOpenGLVertexArrayObject::Binder vaoBinder2(&m_vaoQuad);
 	m_programRaycasting->bind();
 
-	m_programRaycasting->setUniformValue(8, m_renderingMode);
-	m_programRaycasting->setUniformValue(9, m_iso);
-	
-	// TODO scale?
-	//m_programRaycasting->setUniformValue(11, projection * modelView);
-
-	// Set the transform
-	m_programRaycasting->setUniformValue(11, modelView);
-	m_programRaycasting->setUniformValue(12, projection);
-	m_programRaycasting->setUniformValue(13, QVector3D(scale.x, scale.y, scale.z));
-	
-	// *your code here*
-	
-	
-	// Render to the screen
+	// Render to the default framebuffer, which is the screen.
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	//glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, renderedTexture, 0);
+	// Set the variables in the raycasting shader.
+	// The number must match the layout location in the shader.
+	m_programRaycasting->setUniformValue(2, modelView);
+	m_programRaycasting->setUniformValue(3, projection);
+	m_programRaycasting->setUniformValue(4, QVector3D(scale.x, scale.y, scale.z));
+
+	m_programRaycasting->setUniformValue(8, m_renderingMode);
+	m_programRaycasting->setUniformValue(9, m_iso);
 	
 	// Bind the frontFaces texture in location 5
 	glActiveTexture(GL_TEXTURE0);
@@ -265,18 +222,20 @@ void GLWidget::paintGL()
 	GLuint backFaces_location = 6;
 	glUniform1i(backFaces_location, 1);
 
-	// Bind the volume in location 7
+	// Bind the volume data in location 7
 	glActiveTexture(GL_TEXTURE2);
 	m_VolumeTexture->bind();
 	GLuint volume_location = 7;
 	glUniform1i(volume_location, 2);
 	
-	//  Draw the Quad. That one should be bound already?
+	// Draw the Quad. 
+	// This is a square that covers the whole screen. It was bound in `init()`.
+	// The magic happens in its fragment shader, which does the ray casting.
 	glDrawElements(
-		GL_TRIANGLES,      // mode
+		GL_TRIANGLES,                // mode
 		2 * 3 * sizeof(GLushort),    // count
-		GL_UNSIGNED_SHORT,   // type
-		(void*)0           // element array buffer offset
+		GL_UNSIGNED_SHORT,           // type
+		(void*)0                     // element array buffer offset
 	);
 
 	vaoBinder2.release();
@@ -296,7 +255,7 @@ void GLWidget::initializeGL()
 	m_VolumeTexture->setFormat(QOpenGLTexture::RGB32F);
 
 	initializeOpenGLFunctions();
-	//glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
+	// Default background color is white.
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	
 	glEnable(GL_DEPTH_TEST);

@@ -21,69 +21,68 @@
 #extension GL_ARB_explicit_attrib_location : enable
 
 // The raycasting shader renders on the "m_vertexBufferQuad",
-// which is just a sqare. It's basically the 2D texture.
+// which is just a sqare that covers the whole screen.
 layout(location = 0) in vec3 vertex;
 
-// I think this binds to the 'texCoord' variable in the Fragment shader.
+// This binds to the 'texCoord' variable in the Fragment shader.
 out vec2 texCoord;
 
+// This part of the shader processes each corner of the square.
 void main()
 {
+	// The square is already defined to be at the exact position to cover the whole screen.
 	gl_Position = vec4(vertex, 1.0);
-
-	// What should this one do? 
-	// It doesn't apply the camera transform, that's the job of "cube.glsl".
-
-	// I think it just maps the vertec coordinates to the texture coordinates.
+	// This maps the vertex coordinates to the 2D texture coordinates.
 	texCoord = vertex.xy;
 }
 
 -- Fragment
 
+#extension GL_ARB_explicit_attrib_location : enable
 #extension GL_ARB_explicit_uniform_location : enable
 
 // "uniform" means that this value is the same in all parallel executions of this shader.
 
-// "sampler2D" means its a 2D array of (what? vec3? vec4?) values.
-// The frontFaces are the (world) coordinates where the rays should start. 
+// The transforms to apply to a point to get to camera space. 
+// There we know that the camera is always at vec4(0), and we can do the shading calculation.
+layout(location = 2) uniform mat4 mvMatrix;
+layout(location = 3) uniform mat4 projMatrix;
+layout(location = 4) uniform vec3 scale;
+
+// "sampler2D" means its a 2D array of values.
+// The frontFaces are the coordinates where the rays should start. 
 // backFaces are the coordinates where the rays should end.
 layout(location = 5) uniform sampler2D frontFaces;
 layout(location = 6) uniform sampler2D backFaces;
-// This is the data of the scan.
+// This is the loaded data of the scan.
 layout(location = 7) uniform sampler3D volume;
 
 layout(location = 8) uniform int renderingMode;
-layout(location = 9) uniform float iso = 0.1;
-// TODO: The step size shouldn't be much more than the model resolution, otherwise the gradient gets more pixelated.
-layout(location = 10) uniform int MAX_STEPS = 128; //1024;
-
-// The transform to apply to a point to get to camera space. 
-// Then we know that the camera is always at vec4(0), and we can do the shading calculation.
-//layout(location = 11) uniform mat4 MVP_transform;
-
-layout(location = 11) uniform mat4 mvMatrix;
-layout(location = 12) uniform mat4 projMatrix;
-layout(location = 13) uniform vec3 scale;
-
-
+layout(location = 9) uniform float iso;
+// The step size shouldn't be much more than the model resolution, otherwise the gradient gets to pixelated.
+layout(location = 10) uniform int MAX_STEPS = 256;
+ 
+ // Interpolated pixel coordinate.
 in vec2 texCoord;
+// The color that gets drawn.
 out vec4 fragColor;
 
-// This struct is needed to return two values from `trace_ray().`
+// This struct is needed to return multiple values from `trace_ray().`
 struct RayTraceResult {
 	vec4 position;
 	vec4 step;
 	bool was_hit;
 };
 
+// Shot a ray through the volume to do the first hit detection.
 RayTraceResult trace_ray(vec2 texCoordNormalized) 
 {
 	// end position minus start position gives the ray direction.
 	vec4 start = texture(frontFaces, texCoordNormalized);
 	vec4 end = texture(backFaces, texCoordNormalized);
 	vec4 direction = end - start;
-	// Divide that into the individual steps
-	vec4 step = direction / MAX_STEPS;
+	// Divide that into the individual steps.
+	vec4 step = vec4(direction.xyz / MAX_STEPS, 1.0);
 
 	bool was_hit = false;
 	vec4 last_point = start;
@@ -103,7 +102,6 @@ RayTraceResult trace_ray(vec2 texCoordNormalized)
 		current_density = texture(volume, current_point.xyz);
 		
 		// The volume contains vec4, but only the x component seems to be used.
-		// TODO: Verify that.
 		if (current_density.x > iso) {
 			was_hit = true;
 			break;
@@ -120,12 +118,12 @@ RayTraceResult trace_ray(vec2 texCoordNormalized)
 	float fraction = length(iso - last_density) / length(current_density - last_density);
 	fraction = clamp(fraction, 0, 1); // Prevents visual noise.
 	vec4 first_hit = last_point + fraction * step;
-
+	 
 	vec4 pos;
 	if (was_hit) {
 		pos = vec4(first_hit.xyz, 1.0); // Position of the first hit
 	} else {
-		pos = vec4(0.0); // black
+		pos = vec4(0.0); // black otherwise.
 	}
 	return RayTraceResult(pos, step, was_hit);
 }
@@ -152,8 +150,6 @@ vec4 diffuse_shading(vec3 position, vec3 normal)
 {
 	// Adapted from: http://www.opengl-tutorial.org/beginners-tutorials/tutorial-8-basic-shading/
 
-	// TODO: The light doesn't seem to be calculated right.
-
 	// Transform the position (which is in model space) into the camera space.
 	vec4 position_in_cameraspace = projMatrix * mvMatrix * vec4(position * scale, 1.0);
 	vec4 normal_in_cameraspace = normalize(projMatrix * mvMatrix * vec4(normal * scale, 1.0));
@@ -166,15 +162,13 @@ vec4 diffuse_shading(vec3 position, vec3 normal)
 	// Cosine of the angle between the normal and the light direction, clamped above 0.
 	//  - light is at the vertical of the surface -> 1
 	//  - light is perpendicular to the surface -> 0
-	//  - light is behind the triangle -> negative -> 0
+	//  - light is behind the triangle -> negative -> clamp to 0
 	float cos_theta = clamp(dot(normal_in_cameraspace.xyz, light_direction), 0, 1);
 
 	vec4 light_color = vec4(1.0, 1.0, 1.0, 1.0); // light blue 
 	// The more the light shines at an angle, the darker it becomes.
 	vec4 color = light_color * cos_theta;
 	return color;
-	//return vec4(cos_theta, cos_theta, cos_theta, 1.0); 
-	//return vec4(light_direction, 1.0); 
 } 
  
 void main()
@@ -206,6 +200,7 @@ void main()
 				vec3 normal = surface_gradient_normalized(res.position.xyz, length(res.step.xyz));
 				fragColor = diffuse_shading(res.position.xyz, normal);
 			} else {
+				// In case we didn't hit the volume, we want a background color.
 				fragColor = vec4(0.0); // black
 			}
 			return;
