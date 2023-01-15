@@ -1,4 +1,4 @@
-/*
+﻿/*
 * Visualization 1 - Task 1 Framework
 * Copyright (C) University of Passau
 *   Faculty of Computer Science and Mathematics
@@ -54,14 +54,18 @@ layout(location = 7) uniform sampler3D volume;
 
 layout(location = 8) uniform int renderingMode;
 layout(location = 9) uniform float iso = 0.1;
-layout(location = 10) uniform int MAX_STEPS = 10; //1024;
-
-
+layout(location = 10) uniform int MAX_STEPS = 100; //1024;
 
 in vec2 texCoord;
 out vec4 fragColor;
 
-vec4 trace_ray(vec2 texCoordNormalized) 
+// This struct is needed to return two values from `trace_ray().`
+struct PositionAndStep {
+	vec4 position;
+	vec4 step;
+};
+
+PositionAndStep trace_ray(vec2 texCoordNormalized) 
 {
 	// end position minus start position gives the ray direction.
 	vec4 start = texture(frontFaces, texCoordNormalized);
@@ -106,11 +110,30 @@ vec4 trace_ray(vec2 texCoordNormalized)
 	fraction = clamp(fraction, 0, 1); // Prevents visual noise.
 	vec4 first_hit = last_point + fraction * step;
 
+	vec4 pos;
 	if (was_hit) {
-		return vec4(first_hit.xyz, 1.0); // Position of the first hit
+		pos = vec4(first_hit.xyz, 1.0); // Position of the first hit
 	} else {
-		return vec4(0.0); // black
+		pos = vec4(0.0); // black
 	}
+	return PositionAndStep(pos, step);
+}
+
+// The surface gradient is used as the normal vector for shading calculation.
+// I'm using `vec3` instead of `vec4` here, because the math is defined in terms of `vec3`.
+vec3 surface_gradient_normalized(vec3 pos, float step) {
+	// This formular for gradient calculation is from the exercise description. 
+	// `gradient` is Δf, `step` is 𝜀 and the `texture(volume, pos.xyz)` call is `f(x, y, z)`. 
+	// The term `f(x - 𝜀)` is a shorthand for `f(x - 𝜀, y, z)`.
+	// The formular divides the result by 2, but since it needs to be normalized anyway, the division can be ommited.
+	vec3 gradient = vec3(
+		texture(volume, vec3(pos.x - step, pos.y, pos.z)).x - texture(volume, vec3(pos.x + step, pos.y, pos.z)).x,
+		texture(volume, vec3(pos.x, pos.y - step, pos.z)).x - texture(volume, vec3(pos.x, pos.y + step, pos.z)).x,
+		texture(volume, vec3(pos.x, pos.y, pos.z - step)).x - texture(volume, vec3(pos.x, pos.y, pos.z + step)).x
+	);
+	// Divide the vector by its length to get a vector of length 1.
+	vec3 normal = normalize(gradient);
+	return normal;
 }
 
 void main()
@@ -132,12 +155,14 @@ void main()
 		}
 		case 2: //render volume (positions)
 		{
-			fragColor = trace_ray(texCoordNormalized);
+			fragColor = trace_ray(texCoordNormalized).position;
 			return;
 		}
 		case 3: //render volume (shaded)
 		{
-			fragColor = vec4(1,1,0,1);
+			PositionAndStep ps = trace_ray(texCoordNormalized);
+			vec3 normal = surface_gradient_normalized(ps.position.xyz, length(ps.step.xyz));
+			fragColor = vec4(normal, 1);
 			return;
 		}
 	}
