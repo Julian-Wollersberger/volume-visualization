@@ -70,12 +70,13 @@ in vec2 texCoord;
 out vec4 fragColor;
 
 // This struct is needed to return two values from `trace_ray().`
-struct PositionAndStep {
+struct RayTraceResult {
 	vec4 position;
 	vec4 step;
+	bool was_hit;
 };
 
-PositionAndStep trace_ray(vec2 texCoordNormalized) 
+RayTraceResult trace_ray(vec2 texCoordNormalized) 
 {
 	// end position minus start position gives the ray direction.
 	vec4 start = texture(frontFaces, texCoordNormalized);
@@ -126,7 +127,7 @@ PositionAndStep trace_ray(vec2 texCoordNormalized)
 	} else {
 		pos = vec4(0.0); // black
 	}
-	return PositionAndStep(pos, step);
+	return RayTraceResult(pos, step, was_hit);
 }
 
 // The surface gradient is used as the normal vector for shading calculation.
@@ -200,10 +201,13 @@ void main()
 		}
 		case 3: //render volume (shaded)
 		{
-			PositionAndStep ps = trace_ray(texCoordNormalized);
-			vec3 normal = surface_gradient_normalized(ps.position.xyz, length(ps.step.xyz));
-			//fragColor = vec4(normal, 1.0);
-			fragColor = diffuse_shading(ps.position.xyz, normal);
+			RayTraceResult res = trace_ray(texCoordNormalized);
+			if (res.was_hit) {
+				vec3 normal = surface_gradient_normalized(res.position.xyz, length(res.step.xyz));
+				fragColor = diffuse_shading(res.position.xyz, normal);
+			} else {
+				fragColor = vec4(0.0); // black
+			}
 			return;
 		}
 	}
