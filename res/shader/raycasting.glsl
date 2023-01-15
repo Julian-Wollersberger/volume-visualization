@@ -54,7 +54,17 @@ layout(location = 7) uniform sampler3D volume;
 
 layout(location = 8) uniform int renderingMode;
 layout(location = 9) uniform float iso = 0.1;
-layout(location = 10) uniform int MAX_STEPS = 100; //1024;
+// TODO: The step size shouldn't be much more than the model resolution, otherwise the gradient gets more pixelated.
+layout(location = 10) uniform int MAX_STEPS = 128; //1024;
+
+// The transform to apply to a point to get to camera space. 
+// Then we know that the camera is always at vec4(0), and we can do the shading calculation.
+//layout(location = 11) uniform mat4 MVP_transform;
+
+layout(location = 11) uniform mat4 mvMatrix;
+layout(location = 12) uniform mat4 projMatrix;
+layout(location = 13) uniform vec3 scale;
+
 
 in vec2 texCoord;
 out vec4 fragColor;
@@ -121,7 +131,8 @@ PositionAndStep trace_ray(vec2 texCoordNormalized)
 
 // The surface gradient is used as the normal vector for shading calculation.
 // I'm using `vec3` instead of `vec4` here, because the math is defined in terms of `vec3`.
-vec3 surface_gradient_normalized(vec3 pos, float step) {
+vec3 surface_gradient_normalized(vec3 pos, float step) 
+{
 	// This formular for gradient calculation is from the exercise description. 
 	// `gradient` is Δf, `step` is 𝜀 and the `texture(volume, pos.xyz)` call is `f(x, y, z)`. 
 	// The term `f(x - 𝜀)` is a shorthand for `f(x - 𝜀, y, z)`.
@@ -136,6 +147,35 @@ vec3 surface_gradient_normalized(vec3 pos, float step) {
 	return normal;
 }
 
+vec4 diffuse_shading(vec3 position, vec3 normal) 
+{
+	// Adapted from: http://www.opengl-tutorial.org/beginners-tutorials/tutorial-8-basic-shading/
+
+	// TODO: The light doesn't seem to be calculated right.
+
+	// Transform the position (which is in model space) into the camera space.
+	vec4 position_in_cameraspace = projMatrix * mvMatrix * vec4(position * scale, 1.0);
+	vec4 normal_in_cameraspace = normalize(projMatrix * mvMatrix * vec4(normal * scale, 1.0));
+	// The camera is always at the origin of the camera space.
+	vec3 cam_pos = vec3(0.0, 0.0, 0.0);
+
+	// The light is placed at the camera.
+	vec3 light_direction = normalize(position_in_cameraspace.xyz - cam_pos);
+
+	// Cosine of the angle between the normal and the light direction, clamped above 0.
+	//  - light is at the vertical of the surface -> 1
+	//  - light is perpendicular to the surface -> 0
+	//  - light is behind the triangle -> negative -> 0
+	float cos_theta = clamp(dot(normal_in_cameraspace.xyz, light_direction), 0, 1);
+
+	vec4 light_color = vec4(1.0, 1.0, 1.0, 1.0); // light blue 
+	// The more the light shines at an angle, the darker it becomes.
+	vec4 color = light_color * cos_theta;
+	return color;
+	//return vec4(cos_theta, cos_theta, cos_theta, 1.0); 
+	//return vec4(light_direction, 1.0); 
+} 
+ 
 void main()
 {
 	// the `texture()` call wants the coordinates to be from 0 to 1, not -1 to 1.
@@ -162,7 +202,8 @@ void main()
 		{
 			PositionAndStep ps = trace_ray(texCoordNormalized);
 			vec3 normal = surface_gradient_normalized(ps.position.xyz, length(ps.step.xyz));
-			fragColor = vec4(normal, 1);
+			//fragColor = vec4(normal, 1.0);
+			fragColor = diffuse_shading(ps.position.xyz, normal);
 			return;
 		}
 	}

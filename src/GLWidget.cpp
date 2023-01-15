@@ -235,7 +235,15 @@ void GLWidget::paintGL()
 
 	m_programRaycasting->setUniformValue(8, m_renderingMode);
 	m_programRaycasting->setUniformValue(9, m_iso);
+	
+	// TODO scale?
+	//m_programRaycasting->setUniformValue(11, projection * modelView);
 
+	// Set the transform
+	m_programRaycasting->setUniformValue(11, modelView);
+	m_programRaycasting->setUniformValue(12, projection);
+	m_programRaycasting->setUniformValue(13, QVector3D(scale.x, scale.y, scale.z));
+	
 	// *your code here*
 	
 	
