@@ -54,7 +54,9 @@ layout(location = 7) uniform sampler3D volume;
 
 layout(location = 8) uniform int renderingMode;
 layout(location = 9) uniform float iso = 0.1;
-layout(location = 10) uniform int MAX_STEPS = 1024;
+layout(location = 10) uniform int MAX_STEPS = 10; //1024;
+
+
 
 in vec2 texCoord;
 out vec4 fragColor;
@@ -68,28 +70,46 @@ vec4 trace_ray(vec2 texCoordNormalized)
 	// Divide that into the individual steps
 	vec4 step = direction / MAX_STEPS;
 
-	vec4 first_hit = end;
 	bool was_hit = false;
+	vec4 last_point = start;
+	vec4 last_density = vec4(0.0);
+	vec4 current_point = start;
+	vec4 current_density = vec4(0.0);
+
 	for (int i = 0; i < MAX_STEPS; i++)
 	{
+		last_point = current_point;
+		last_density = current_density;
+		// Doing `+= step` is slightly faster than `i * step`, at the cost of accumulating rounding errors.
+		//current_point = start + i * step;
+		current_point += step;
+		
 		// Get the density at the current ray position.
-		// I use `i * step` instead of `+= step` to minimize rounding errors.
-		vec4 current_point = start + i * step;
-		vec4 density = texture(volume, current_point.xyz);
+		current_density = texture(volume, current_point.xyz);
 		
 		// The volume contains vec4, but only the x component seems to be used.
-		if (density.x > iso) {
-			first_hit = current_point;
+		// TODO: Verify that.
+		if (current_density.x > iso) {
 			was_hit = true;
 			break;
 		}
 	}
 
-	//return texture(volume, first_hit.xyz);
+	// # Interpolate between the last two steps.
+	// 
+	// We want to only go a fraction of `step` from `last_point` to `current_point`, not the whole step.
+	// That fraction is determined by where `iso` is inbetween the two.
+	// 
+	// Example: `iso` is 0.1, `last_density` is 0.09, `current_density` is 0.12. Then the interpolated point
+	// is a third of the way between the two, meaning that `fraction` is 0.3333.
+	float fraction = length(iso - last_density) / length(current_density - last_density);
+	fraction = clamp(fraction, 0, 1); // Prevents visual noise.
+	vec4 first_hit = last_point + fraction * step;
+
 	if (was_hit) {
-		return vec4(1.0); //white
+		return vec4(first_hit.xyz, 1.0); // Position of the first hit
 	} else {
-		return vec4(0.0); //transparent black
+		return vec4(0.0); // black
 	}
 }
 
