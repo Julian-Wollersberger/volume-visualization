@@ -45,7 +45,7 @@ void main()
 	// The other corner must stay at (1|1|1), so divide by two.
 	// Otherwise we would get negative color values, which just saturates to black.
 	texCoordVar = (vertex.xyz + 1.0) / 2.0;
-}
+} 
 
 
 -- Fragment

@@ -19,23 +19,42 @@
 -- Vertex
 
 #extension GL_ARB_explicit_attrib_location : enable
+#extension GL_ARB_explicit_uniform_location : enable
+
+// TODO Fix docs for cube.
 
 // The raycasting shader renders on the "m_vertexBufferQuad",
 // which is just a sqare that covers the whole screen.
 layout(location = 0) in vec3 vertex;
 
+// The transforms to apply to a point to get to camera space. 
+// There we know that the camera is always at vec4(0), and we can do the shading calculation.
+layout(location = 2) uniform mat4 mvMatrix;
+layout(location = 3) uniform mat4 projMatrix;
+layout(location = 4) uniform vec3 scale;
+
 // This binds to the 'texCoord' variable in the Fragment shader.
-out vec2 texCoord;
+// The textCoord is the coordinate on the screen, which is needed 
+// to do the frontFaces and backFaces texture lookup.
+//out vec2 texCoord;
 
 // This part of the shader processes each corner of the square.
 void main()
 {
+	// OLD
 	// The square is already defined to be at the exact position to cover the whole screen.
-	gl_Position = vec4(vertex, 1.0);
+	//gl_Position = vec4(vertex, 1.0); 
 	// This maps the vertex coordinates to the 2D texture coordinates.
-	texCoord = vertex.xy;
+	// texCoord = vertex.xy;
+ 
+	//	NEW
+	gl_Position = projMatrix * mvMatrix * vec4(vertex * scale, 1.0);   
+	//texCoord = ((vertex + 1.0) / 2.0).xy;
+	//texCoord = gl_Position.xy;
+	//texCoord = vertex.xy;
+	//texCoord = (projMatrix * mvMatrix * vec4(vertex * scale, 1.0)).xy;
 }
-
+    
 -- Fragment
 
 #extension GL_ARB_explicit_attrib_location : enable
@@ -61,9 +80,13 @@ layout(location = 8) uniform int renderingMode;
 layout(location = 9) uniform float iso;
 // The step size shouldn't be much more than the model resolution, otherwise the gradient gets to pixelated.
 layout(location = 10) uniform int MAX_STEPS = 256;
+
+// Get the size of the framebuffer.
+layout(location = 11) uniform int window_height;
+layout(location = 12) uniform int window_width;
  
  // Interpolated pixel coordinate.
-in vec2 texCoord;
+//in vec2 texCoord;
 // The color that gets drawn.
 out vec4 fragColor;
 
@@ -170,12 +193,17 @@ vec4 diffuse_shading(vec3 position, vec3 normal)
 	vec4 color = light_color * cos_theta;
 	return color;
 } 
- 
+
 void main()
 {
 	// the `texture()` call wants the coordinates to be from 0 to 1, not -1 to 1.
-	vec2 texCoordNormalized = (texCoord + 1.0) / 2.0;
+	//vec2 texCoordNormalized = (texCoord + 1.0) / 2.0;
+	//vec2 texCoordNormalized = texCoord;
+	vec2 texCoordNormalized = vec2((gl_FragCoord.x -0.5) / window_width, (gl_FragCoord.y -0.5) / window_height);
 
+	//fragColor = vec4(texCoordNormalized.x, texCoordNormalized.y, 1.0, 1.0);
+	//return;
+	 
 	switch(renderingMode)
 	{
 		case 0: //render front faces
@@ -207,4 +235,4 @@ void main()
 		}
 	}
 }
-
+ 

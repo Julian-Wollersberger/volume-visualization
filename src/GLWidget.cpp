@@ -150,7 +150,9 @@ void GLWidget::paintGL()
 	m_programCube->setUniformValue(4, QVector3D(scale.x, scale.y, scale.z));
 
 	// 1. render front faces to FBO
-
+	/* With the optimizations, this is directly done in the raycasting shader 
+	 * and we don't need to run the cube shader anymore. 
+	 */
 	// Bind the front faces buffer to the `fragColor` our variable in the cube shader.
 	m_FBO_frontFaces->bind();
 	// Reset the OpenGL state.
@@ -161,7 +163,7 @@ void GLWidget::paintGL()
 	
 	// Draw to m_FBO_frontFaces.
 	// (There are several buffers currently bound: vaoBinder, m_programCube, m_FBO_frontFaces, 
-	// and other from the `init()` function, like the cube vertices.)
+	// and other from the `initializeGL()` function, like the cube vertices.)
 	glDrawElements(
 		GL_TRIANGLES,                 // mode
 		12 * 3 * sizeof(GLushort),    // count
@@ -171,6 +173,7 @@ void GLWidget::paintGL()
 	// We're done with the front faces.
 	glDisable(GL_CULL_FACE);
 	m_FBO_frontFaces->release();
+	
 
 	// 2. render back faces to FBO
 	m_FBO_backFaces->bind();
@@ -200,6 +203,9 @@ void GLWidget::paintGL()
 	// Render to the default framebuffer, which is the screen.
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	// We don't want to raycast from the back triangles of the cube.
+	//glEnable(GL_CULL_FACE); //TODO doesn't work
+	//glCullFace(GL_BACK);
 
 	// Set the variables in the raycasting shader.
 	// The number must match the layout location in the shader.
@@ -209,6 +215,9 @@ void GLWidget::paintGL()
 
 	m_programRaycasting->setUniformValue(8, m_renderingMode);
 	m_programRaycasting->setUniformValue(9, m_iso);
+
+	m_programRaycasting->setUniformValue(11, height());
+	m_programRaycasting->setUniformValue(12, width());
 	
 	// Bind the frontFaces texture in location 5
 	glActiveTexture(GL_TEXTURE0);
@@ -227,17 +236,17 @@ void GLWidget::paintGL()
 	m_VolumeTexture->bind();
 	GLuint volume_location = 7;
 	glUniform1i(volume_location, 2);
-	
-	// Draw the Quad. 
-	// This is a square that covers the whole screen. It was bound in `init()`.
+
+	// Draw the Cube in the raycasting shader. It was bound in `initializeGL()`.
 	// The magic happens in its fragment shader, which does the ray casting.
 	glDrawElements(
 		GL_TRIANGLES,                // mode
-		2 * 3 * sizeof(GLushort),    // count
+		12 * 3 * sizeof(GLushort),   // count
 		GL_UNSIGNED_SHORT,           // type
 		(void*)0                     // element array buffer offset
 	);
 
+	glDisable(GL_CULL_FACE);
 	vaoBinder2.release();
 }
 
@@ -257,6 +266,9 @@ void GLWidget::initializeGL()
 	initializeOpenGLFunctions();
 	// Default background color is white.
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	// Set the initial camera position to be a bit off-center and further back, 
+	// to see the cube at a better initial angle.
+	//m_camera.updatePos(-0.2, -0.1, -2.0); //TODO
 	
 	glEnable(GL_DEPTH_TEST);
 
@@ -320,15 +332,20 @@ void GLWidget::initializeGL()
 
 	QOpenGLVertexArrayObject::Binder vaoBinder2(&m_vaoQuad);
 	
+	/* With the optimizations, the Quad is no longer needed.
 	m_vertexBufferQuad.create();
 	m_vertexBufferQuad.bind();
-	
-	// Setup our index buffer object
+
 	m_indexBufferQuad.create();
 	m_indexBufferQuad.bind();
 
 	m_vertexBufferQuad.allocate(quad_vertices, 4 * 3 * sizeof(GLfloat));
 	m_indexBufferQuad.allocate(quad_elements, 2 * 3 * sizeof(GLushort));
+	*/
+	
+	// Instead of the Quad, the cube is now bound to the raycasting shader.
+	m_vertexBuffer.bind();
+	m_indexBuffer.bind();
 
 	m_programRaycasting->setAttributeBuffer(
 		0,			// Specifies the index of the generic vertex attribute to be modified
