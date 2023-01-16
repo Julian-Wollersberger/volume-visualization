@@ -176,6 +176,7 @@ void GLWidget::paintGL()
 	*/
 
 	// 2. render back faces to FBO
+	// I didn't manage to optimize this one away. The math defeated me.
 	m_FBO_backFaces->bind();
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_CULL_FACE);
@@ -204,8 +205,8 @@ void GLWidget::paintGL()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	// We don't want to raycast from the back triangles of the cube.
-	//glEnable(GL_CULL_FACE); //TODO doesn't work
-	//glCullFace(GL_BACK);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 
 	// Set the variables in the raycasting shader.
 	// The number must match the layout location in the shader.
@@ -264,11 +265,8 @@ void GLWidget::initializeGL()
 	m_VolumeTexture->setFormat(QOpenGLTexture::RGB32F);
 
 	initializeOpenGLFunctions();
-	// Default background color is white.
-	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-	// Set the initial camera position to be a bit off-center and further back, 
-	// to see the cube at a better initial angle.
-	//m_camera.updatePos(-0.2, -0.1, -2.0); //TODO
+	// Default background color is a dark grey.
+	glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
 	
 	glEnable(GL_DEPTH_TEST);
 

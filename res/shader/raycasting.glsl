@@ -21,48 +21,28 @@
 #extension GL_ARB_explicit_attrib_location : enable
 #extension GL_ARB_explicit_uniform_location : enable
 
-// TODO Fix docs for cube.
-
-// The raycasting shader renders on the "m_vertexBufferQuad",
-// which is just a sqare that covers the whole screen.
+// In the optimized version, the raycasting shader renders the cube vertices directly
+// and doesn't need the screen-covering `m_vertexBufferQuad`.
 layout(location = 0) in vec3 vertex;
 
-// The transforms to apply to a point to get to camera space. 
-// There we know that the camera is always at vec4(0), and we can do the shading calculation.
+// The transforms to apply to a point in modelspace to get to cameraspace. 
+// In cameraspace we know that the camera is always at vec4(0), and we can do the shading calculation.
 layout(location = 2) uniform mat4 mvMatrix;
 layout(location = 3) uniform mat4 projMatrix;
 layout(location = 4) uniform vec3 scale;
 
-// This binds to the 'texCoord' variable in the Fragment shader.
-// The textCoord is the coordinate on the screen, which is needed 
-// to do the frontFaces and backFaces texture lookup.
-//out vec2 texCoord;
-
-out vec3 front_face_coord;
-out vec3 back_face_coord;
+// The position of the vertex in modelspace, but normalized to 0.0 to 1.0.
+out vec3 front_face_normalized;
 
 // This part of the shader processes each corner of the square.
 void main()
 {
-	// OLD
-	// The square is already defined to be at the exact position to cover the whole screen.
-	//gl_Position = vec4(vertex, 1.0); 
-	// This maps the vertex coordinates to the 2D texture coordinates.
-	// texCoord = vertex.xy;
- 
-	//	NEW
+	// Show the cube in the final position.
 	gl_Position = projMatrix * mvMatrix * vec4(vertex * scale, 1.0);   
-	//texCoord = ((vertex + 1.0) / 2.0).xy;
-	//texCoord = gl_Position.xy;
-	//texCoord = vertex.xy;
-	//texCoord = (projMatrix * mvMatrix * vec4(vertex * scale, 1.0)).xy;
 
 	// Move the cube to have one corner at (0|0|0), instead of at (-1|-1|-1).
 	// The other corner must stay at (1|1|1), so divide by two.
-	front_face_coord = (vertex.xyz + 1.0) / 2.0;
-	
-	// The corresponding back face is on the opposite side of the cube.
-	back_face_coord = 1 - front_face_coord; //TODO geht nicht.
+	front_face_normalized = (vertex.xyz + 1.0) / 2.0;
 }
     
 -- Fragment
@@ -95,10 +75,8 @@ layout(location = 10) uniform int MAX_STEPS = 256;
 layout(location = 11) uniform int window_height;
 layout(location = 12) uniform int window_width;
  
- // Interpolated pixel coordinate.
-//in vec2 texCoord;
-in vec3 front_face_coord;
-in vec3 back_face_coord;
+// Interpolated coordinate of the front face.
+in vec3 front_face_normalized;
 
 // The color that gets drawn.
 out vec4 fragColor;
@@ -114,11 +92,9 @@ struct RayTraceResult {
 RayTraceResult trace_ray(vec2 texCoordNormalized) 
 {
 	// end position minus start position gives the ray direction.
-	//vec4 start = texture(frontFaces, texCoordNormalized);
+	// Both start and end are between 0 and 1, to make texture lookup and the debug views easier.
+	vec4 start = vec4(front_face_normalized, 1.0);
 	vec4 end = texture(backFaces, texCoordNormalized);
-	
-	vec4 start = vec4(front_face_coord, 1.0);
-	//vec4 end = vec4(back_face_coord, 1.0);
 	vec4 direction = end - start;
 	// Divide that into the individual steps.
 	vec4 step = vec4(direction.xyz / MAX_STEPS, 1.0);
@@ -212,27 +188,24 @@ vec4 diffuse_shading(vec3 position, vec3 normal)
 
 void main()
 {
-	// the `texture()` call wants the coordinates to be from 0 to 1, not -1 to 1.
-	//vec2 texCoordNormalized = (texCoord + 1.0) / 2.0;
-	// TODO docs
+	// Get the "pixel" coordinates of the current fragment. Previously, this was done
+	// using the `m_vertexBufferQuad` square.
+	// The `texture()` call wants the coordinates to be from 0 to 1.
 	vec2 texCoordNormalized = vec2(gl_FragCoord.x / window_width, gl_FragCoord.y / window_height);
-
-	//fragColor = vec4(texCoordNormalized.x, texCoordNormalized.y, gl_FragCoord.z, 1.0);
-	//return;
 	 
 	switch(renderingMode)
 	{
 		case 0: //render front faces
 		{
+			// The previous version had to look up the front faces from a texture.
+			// After the optimization, it is directly computed in this shader.
 			//fragColor = texture(frontFaces, texCoordNormalized);
-			fragColor = vec4(front_face_coord, 1.0); 
+			fragColor = vec4(front_face_normalized, 1.0); 
 			return;
 		}
 		case 1: //render back faces
 		{
 			fragColor = texture(backFaces, texCoordNormalized);
-			//fragColor = vec4(back_face_coord, 1.0); 
-			//fragColor = vec4(1 - front_face_coord, 1.0); 
 			return;
 		}
 		case 2: //render volume (positions)
