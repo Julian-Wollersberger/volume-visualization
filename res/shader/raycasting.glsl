@@ -33,13 +33,15 @@ layout(location = 2) uniform mat4 mvMatrix;
 layout(location = 3) uniform mat4 projMatrix;
 layout(location = 4) uniform vec3 scale;
 
+layout(location = 13) uniform mat4 model_view_projection_inverse;
+
 // This binds to the 'texCoord' variable in the Fragment shader.
 // The textCoord is the coordinate on the screen, which is needed 
 // to do the frontFaces and backFaces texture lookup.
 //out vec2 texCoord;
 
-out vec3 front_face_coord;
-out vec3 back_face_coord;
+out vec3 front_face_modelspace;
+out vec3 front_face_cameraspace;
 
 // This part of the shader processes each corner of the square.
 void main()
@@ -59,10 +61,11 @@ void main()
 
 	// Move the cube to have one corner at (0|0|0), instead of at (-1|-1|-1).
 	// The other corner must stay at (1|1|1), so divide by two.
-	front_face_coord = (vertex.xyz + 1.0) / 2.0;
+	//front_face_coord = (vertex.xyz + 1.0) / 2.0;
+	//front_face_coord = vertex.xyz;
 	
-	// The corresponding back face is on the opposite side of the cube.
-	back_face_coord = 1 - front_face_coord; //TODO geht nicht.
+	front_face_modelspace = vertex.xyz;
+	front_face_cameraspace = gl_Position.xyz;
 }
     
 -- Fragment
@@ -94,11 +97,14 @@ layout(location = 10) uniform int MAX_STEPS = 256;
 // Get the size of the framebuffer.
 layout(location = 11) uniform int window_height;
 layout(location = 12) uniform int window_width;
+
+layout(location = 13) uniform mat4 model_view_projection_inverse;
+layout(location = 14) uniform vec3 camera_position;
  
  // Interpolated pixel coordinate.
 //in vec2 texCoord;
-in vec3 front_face_coord;
-in vec3 back_face_coord;
+in vec3 front_face_modelspace;
+in vec3 front_face_cameraspace;
 
 // The color that gets drawn.
 out vec4 fragColor;
@@ -115,13 +121,29 @@ RayTraceResult trace_ray(vec2 texCoordNormalized)
 {
 	// end position minus start position gives the ray direction.
 	//vec4 start = texture(frontFaces, texCoordNormalized);
-	vec4 end = texture(backFaces, texCoordNormalized);
+	//vec4 end = texture(backFaces, texCoordNormalized);
 	
-	vec4 start = vec4(front_face_coord, 1.0);
-	//vec4 end = vec4(back_face_coord, 1.0);
-	vec4 direction = end - start;
+	vec3 front_face_normalized = (front_face_modelspace + 1.0) / 2.0;
+	vec4 start = vec4(front_face_normalized, 1.0);
+
+	//vec4 direction = end - start;
 	// Divide that into the individual steps.
-	vec4 step = vec4(direction.xyz / MAX_STEPS, 1.0);
+	//vec4 step = vec4(direction.xyz / MAX_STEPS, 1.0);
+
+	//vec3 camera_pos = vec3(0.0); // In cameraspace, the camera is always at the origin.
+	//vec3 direction_cameraspace = front_face_cameraspace - camera_pos;
+	// Apply the inverted MVP matrix , to get from cameraspace back to modelspace. 
+	// Important: The `w` component must be 0 to indicate that it's a direction.
+	//vec4 direction_modelspace = model_view_projection_inverse * vec4(direction_cameraspace, 0.0);
+	// The longest distance through the cube is between opposite edges, which is 2 * sqrt(3) long. 
+	// Divide that into equal steps.
+	//vec4 step = normalize(direction_modelspace) * 2 * 1.7320508 / MAX_STEPS;
+
+	vec4 camera_pos_modelspace = inverse(mvMatrix * projMatrix) * vec4(camera_position, 1.0);
+	camera_pos_modelspace = camera_pos_modelspace / camera_pos_modelspace.w; // perspective division
+	vec3 direction = front_face_modelspace - camera_pos_modelspace.xyz;
+	vec4 step = vec4(normalize(direction) * 2 * 1.7320508 / MAX_STEPS, 0.0);
+
 
 	bool was_hit = false;
 	vec4 last_point = start;
@@ -138,7 +160,7 @@ RayTraceResult trace_ray(vec2 texCoordNormalized)
 		current_point += step;
 		
 		// Get the density at the current ray position.
-		current_density = texture(volume, current_point.xyz);
+		current_density = texture(volume, (current_point.xyz + 1.0) / 2.0);
 		
 		// The volume contains vec4, but only the x component seems to be used.
 		if (current_density.x > iso) {
@@ -217,15 +239,36 @@ void main()
 	// TODO docs
 	vec2 texCoordNormalized = vec2(gl_FragCoord.x / window_width, gl_FragCoord.y / window_height);
 
+	// Test the output of gl_FragCoord()
 	//fragColor = vec4(texCoordNormalized.x, texCoordNormalized.y, gl_FragCoord.z, 1.0);
 	//return;
+
+	// Test the output of the inverse transform
+	//fragColor = normalize(model_view_projection_inverse * vec4(front_face_cameraspace, 1.0)); return;
+	vec4 camera_pos_modelspace = inverse(mvMatrix * projMatrix) * vec4(camera_position, 1.0);
+	vec3 direction = front_face_modelspace - camera_pos_modelspace.xyz / camera_pos_modelspace.w;
+	//fragColor = vec4(normalize(direction), 1.0); return;
+	vec4 step = vec4(normalize(direction) * 2 * 1.7320508 / MAX_STEPS, 0.0);
+	fragColor = step * MAX_STEPS; 
+	return;
+	
+
+	// Testing the old step calculation;
+	vec3 front_face_normalized = (front_face_modelspace + 1.0) / 2.0;
+	vec4 start = vec4(front_face_normalized, 1.0);
+	vec4 end = texture(backFaces, texCoordNormalized);
+	vec4 direction2 = end - start;
+	vec4 step2 = vec4(direction2.xyz / MAX_STEPS, 1.0);
+	fragColor = step2 * MAX_STEPS;
+	//return;
 	 
+
 	switch(renderingMode)
 	{
 		case 0: //render front faces
 		{
 			//fragColor = texture(frontFaces, texCoordNormalized);
-			fragColor = vec4(front_face_coord, 1.0); 
+			fragColor = vec4((front_face_modelspace + 1.0) / 2.0, 1.0); 
 			return;
 		}
 		case 1: //render back faces

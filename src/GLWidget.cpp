@@ -141,6 +141,8 @@ void GLWidget::paintGL()
 	// the matrix must be transposed when it is passed from glm to QT!
 	QMatrix4x4 modelView = QMatrix4x4(glm::value_ptr(m_camera.getViewMatrix())).transposed();
 	QMatrix4x4 projection = QMatrix4x4(glm::value_ptr(m_camera.getProjectionMatrix())).transposed();
+	QMatrix4x4 model_view_projection = projection * modelView;
+	QMatrix4x4 model_view_projection_inverse = model_view_projection.inverted();
 
 	QOpenGLVertexArrayObject::Binder vaoBinder(&m_vaoCube);
 	m_programCube->bind();
@@ -218,6 +220,10 @@ void GLWidget::paintGL()
 
 	m_programRaycasting->setUniformValue(11, height());
 	m_programRaycasting->setUniformValue(12, width());
+
+	m_programRaycasting->setUniformValue(13, model_view_projection_inverse);
+	auto pos = m_camera.getPos();
+	m_programRaycasting->setUniformValue(14, QVector3D(pos.x, pos.y, pos.z));
 	
 	// Bind the frontFaces texture in location 5
 	glActiveTexture(GL_TEXTURE0);
