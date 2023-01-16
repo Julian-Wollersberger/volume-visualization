@@ -152,7 +152,7 @@ void GLWidget::paintGL()
 	// 1. render front faces to FBO
 	/* With the optimizations, this is directly done in the raycasting shader 
 	 * and we don't need to run the cube shader anymore. 
-	 */
+	 
 	// Bind the front faces buffer to the `fragColor` our variable in the cube shader.
 	m_FBO_frontFaces->bind();
 	// Reset the OpenGL state.
@@ -173,7 +173,7 @@ void GLWidget::paintGL()
 	// We're done with the front faces.
 	glDisable(GL_CULL_FACE);
 	m_FBO_frontFaces->release();
-	
+	*/
 
 	// 2. render back faces to FBO
 	m_FBO_backFaces->bind();
